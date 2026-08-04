@@ -3,31 +3,328 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="학교 급식을 기준으로 남은 하루의 영양 균형을 계산하는 청소년 식단 최적화 데모">
   <link rel="icon" href="data:,">
-  <title>Meal Constraint Lab</title>
+  <title>급식 다음 | 청소년 식단 밸런스</title>
   <style>
-    :root { --navy:#0a1b3d; --lime:#c8ff36; --paper:#f7f8fb; --line:#d9dfeb; --muted:#667085; }
-    * { box-sizing:border-box; } body { margin:0; background:var(--paper); color:var(--navy); font:15px/1.5 Arial, "Malgun Gothic", sans-serif; }
-    main { max-width:1120px; margin:auto; padding:48px 22px 72px; } .eyebrow{ color:#4f6b00; font-weight:800; letter-spacing:.08em; font-size:.78rem; }
-    h1{font-size:clamp(2.2rem,5vw,4.4rem);line-height:.96;margin:10px 0 18px;letter-spacing:-.06em;} .lead{max-width:690px;color:#40506b;font-size:1.06rem;}
-    .notice{border-left:5px solid var(--lime);padding:12px 16px;background:#fff;max-width:820px;margin:26px 0 34px;color:#46536b}.grid{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:start}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 10px 26px rgba(12,33,76,.05)}
-    h2{font-size:1.1rem;margin:0 0 18px} label{display:block;font-weight:700;font-size:.86rem;margin:15px 0 6px} input,select{width:100%;border:1px solid #b9c3d4;border-radius:8px;padding:10px;background:#fff;font:inherit;color:var(--navy)}.checks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checks label{margin:0;font-weight:500}.checks input{width:auto;margin-right:5px}button{width:100%;margin-top:22px;border:0;border-radius:8px;background:var(--navy);color:#fff;padding:13px;font-weight:800;cursor:pointer}button:hover{background:#152b59}.empty{color:var(--muted);padding:38px 6px;text-align:center}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}.metric{padding:13px;border-radius:10px;background:#eef2f8}.metric b{display:block;font-size:1.2rem}.meals{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.meal{border:1px solid var(--line);border-radius:10px;padding:13px}.meal h3{font-size:.9rem;margin:0 0 7px}.meal p{margin:0;color:#4d5c76}.bar-row{display:grid;grid-template-columns:78px 1fr 54px;gap:8px;align-items:center;margin:9px 0}.bar{height:9px;background:#e3e8f0;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--lime)}.ok{color:#16734d}.warn{color:#ad4a00}@media(max-width:760px){.grid{grid-template-columns:1fr}.summary,.meals{grid-template-columns:1fr}main{padding-top:28px}}
+    :root {
+      --ink: #173c34;
+      --green: #245c4f;
+      --green-dark: #163f36;
+      --mint: #dcebdc;
+      --cream: #f8f1df;
+      --paper: #fffdf7;
+      --orange: #f07b42;
+      --yellow: #f2c45d;
+      --line: #d8dfd5;
+      --muted: #66766f;
+      --ok: #16734d;
+      --warn: #a74820;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--cream);
+      font: 15px/1.6 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    a { color: inherit; }
+    .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    header { position: relative; overflow: hidden; background: var(--paper); border-bottom: 1px solid var(--line); }
+    nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 900; letter-spacing: -.04em; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: #fff; background: var(--green); }
+    nav a { color: var(--green); font-size: 13px; font-weight: 800; text-decoration: none; }
+    .hero { padding: 68px 0 72px; display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 60px; }
+    .eyebrow { color: var(--orange); font-size: 12px; font-weight: 900; letter-spacing: .13em; }
+    h1 { margin: 12px 0 20px; max-width: 680px; font-size: clamp(2.7rem, 6vw, 5.4rem); line-height: 1.02; letter-spacing: -.075em; }
+    .lead { max-width: 620px; margin: 0; color: #4f655e; font-size: 1.08rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border: 0; border-radius: 12px; color: #fff; background: var(--green); font-weight: 900; text-decoration: none; cursor: pointer; }
+    .button:hover { background: var(--green-dark); }
+    .button.secondary { color: var(--green); background: var(--mint); }
+    .tray-card { position: relative; min-height: 350px; padding: 38px; border-radius: 34px; color: #fff; background: var(--green); transform: rotate(1deg); box-shadow: 0 26px 60px rgba(23, 60, 52, .18); }
+    .tray-card::before { content: ""; position: absolute; width: 190px; height: 190px; right: -70px; top: -80px; border-radius: 50%; background: var(--orange); opacity: .95; }
+    .tray-label { position: relative; font-size: 13px; font-weight: 800; opacity: .78; }
+    .tray { position: relative; display: grid; grid-template-columns: 1.35fr .65fr; grid-template-rows: 1fr 1fr; gap: 10px; height: 220px; margin-top: 22px; padding: 12px; border-radius: 25px; background: #d8ddd7; box-shadow: inset 0 0 0 2px rgba(255,255,255,.45); }
+    .tray-cell { display: grid; place-items: center; overflow: hidden; border-radius: 18px; color: var(--ink); background: var(--paper); font-size: 39px; }
+    .tray-cell:first-child { grid-row: 1 / 3; font-size: 64px; }
+    .tray-note { position: relative; margin: 18px 0 0; color: #d8ebe4; font-size: 13px; }
+    main { padding: 54px 0 80px; }
+    .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 28px; }
+    .section-head h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.15; letter-spacing: -.05em; }
+    .section-head p { margin: 0; color: var(--muted); align-self: end; }
+    .workspace { display: grid; grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+    .panel { padding: 24px; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); box-shadow: 0 14px 34px rgba(38, 73, 61, .07); }
+    .panel h3 { margin: 0 0 18px; font-size: 1.04rem; }
+    label.field { display: block; margin: 14px 0 6px; font-size: 13px; font-weight: 900; }
+    input[type="number"], select { width: 100%; min-height: 44px; padding: 8px 11px; border: 1px solid #b9c7bf; border-radius: 10px; color: var(--ink); background: #fff; }
+    .lunch-grid { display: grid; gap: 8px; }
+    .lunch-option { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin: 0; padding: 11px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+    .lunch-option:has(input:checked) { border-color: var(--green); background: var(--mint); }
+    .lunch-option input { accent-color: var(--green); }
+    .lunch-option b { display: block; font-size: 13px; }
+    .lunch-option small { display: block; color: var(--muted); font-size: 11px; }
+    .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .check { margin: 0; font-size: 13px; }
+    .check input { margin-right: 5px; accent-color: var(--green); }
+    form .button { width: 100%; margin-top: 22px; }
+    .notice { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; color: #6b5a35; background: #fff1c9; font-size: 12px; }
+    .empty { min-height: 420px; display: grid; place-items: center; color: var(--muted); text-align: center; }
+    .loading { min-height: 420px; display: grid; place-items: center; color: var(--green); font-weight: 800; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+    .metric { padding: 14px; border-radius: 14px; background: #eef4ed; }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric b { display: block; margin-top: 3px; font-size: 1.25rem; }
+    .meals { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .meal { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .meal.school { border-color: #e6a05e; background: #fff6e9; }
+    .meal h4 { margin: 0 0 5px; font-size: 13px; }
+    .meal p { margin: 0; color: #53675f; font-size: 13px; }
+    .result-title { margin: 22px 0 10px; font-size: 14px; }
+    .bar-row { display: grid; grid-template-columns: 70px 1fr 48px; gap: 9px; align-items: center; margin: 9px 0; font-size: 12px; }
+    .bar { height: 10px; overflow: hidden; border-radius: 99px; background: #e3e9e3; }
+    .bar i { display: block; height: 100%; background: var(--orange); }
+    .checks-result { padding-left: 20px; font-size: 13px; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .method { margin: 18px 0 0; padding: 13px 14px; border-left: 4px solid var(--green); color: #51655e; background: #edf4ee; font-size: 12px; }
+    .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 54px; }
+    .how article { padding: 20px; border-top: 3px solid var(--orange); background: rgba(255,253,247,.62); }
+    .how b { display: block; margin-bottom: 6px; }
+    .how p { margin: 0; color: var(--muted); font-size: 13px; }
+    footer { padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    @media (max-width: 860px) {
+      .hero, .section-head, .workspace { grid-template-columns: 1fr; }
+      .hero { padding-top: 42px; gap: 34px; }
+      .tray-card { min-height: 300px; }
+      .workspace { gap: 14px; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 24px, 1160px); }
+      nav { min-height: 62px; }
+      .hero { padding-bottom: 46px; }
+      .tray-card { padding: 24px; }
+      .summary, .meals, .how { grid-template-columns: 1fr; }
+      .checks { grid-template-columns: 1fr; }
+      .panel { padding: 18px; }
+    }
   </style>
 </head>
-<body><main>
-  <div class="eyebrow">TEAM LEAD PROJECT · DEMO</div><h1>Meal<br>Constraint Lab</h1>
-  <p class="lead">청소년의 기본 조건과 제외 식품, 예산을 입력하면 포함된 소규모 식품 데이터에서 하루 식단 후보를 비교합니다.</p>
-  <p class="notice">시연용 영양 추정치와 제한된 식품 목록으로 계산합니다. 의료·영양 상담이나 실제 급식 편성에 사용하면 안 됩니다.</p>
-  <div class="grid"><section class="panel"><h2>조건 입력</h2><form id="form">
-    <label for="age">나이</label><input id="age" name="age" type="number" value="16" min="13" max="18" required>
-    <label for="sex">성별</label><select id="sex" name="sex"><option value="female">여성</option><option value="male">남성</option></select>
-    <label for="activity">활동량</label><select id="activity" name="activity"><option value="low">낮음</option><option value="medium" selected>보통</option><option value="high">높음</option></select>
-    <label for="budget">하루 예산 (원)</label><input id="budget" name="budget" type="number" value="12000" min="3000" step="500" required>
-    <label>알레르기·제외 식품</label><div class="checks">
-      <label><input type="checkbox" name="exclusions" value="dairy">유제품</label><label><input type="checkbox" name="exclusions" value="egg">계란</label><label><input type="checkbox" name="exclusions" value="fish">생선</label><label><input type="checkbox" name="exclusions" value="soy">대두</label><label><input type="checkbox" name="exclusions" value="gluten">글루텐</label>
-    </div><button>식단 계산하기</button></form></section>
-    <section class="panel" id="result"><div class="empty">조건을 입력하고 식단을 계산해 보세요.</div></section></div>
-</main><script>
-const units={kcal:'kcal',protein:'g',fiber:'g',calcium:'mg',iron:'mg'};
-document.querySelector('#form').addEventListener('submit', async e=>{e.preventDefault();const f=new FormData(e.target);const p={age:f.get('age'),sex:f.get('sex'),activity:f.get('activity'),budget:f.get('budget'),exclusions:f.getAll('exclusions')};const out=document.querySelector('#result');out.innerHTML='<div class="empty">후보 식단을 비교하고 있습니다…</div>';try{const r=await fetch('/api/optimize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});const d=await r.json();if(!r.ok)throw Error(d.error);const meal=Object.entries(d.meals).map(([k,v])=>`<article class="meal"><h3>${k}</h3><p>${v.join(' · ')}</p></article>`).join('');const bars=Object.keys(units).map(k=>`<div class="bar-row"><span>${({kcal:'열량',protein:'단백질',fiber:'식이섬유',calcium:'칼슘',iron:'철'})[k]}</span><div class="bar"><i style="width:${Math.min(d.ratios[k],130)/1.3}%"></i></div><b>${d.ratios[k]}%</b></div>`).join('');const checks=Object.entries(d.constraints).map(([k,v])=>`<li class="${v?'ok':'warn'}">${k}: ${v?'충족':'재검토 필요'}</li>`).join('');out.innerHTML=`<h2>오늘의 계산 결과</h2><div class="summary"><div class="metric"><span>총 비용</span><b>${d.totals.cost.toLocaleString()}원</b></div><div class="metric"><span>제약</span><b>${d.all_constraints_met?'충족':'일부 미충족'}</b></div><div class="metric"><span>후보 선택</span><b>전수 비교</b></div></div><div class="meals">${meal}</div><h2 style="margin-top:24px">목표 대비</h2>${bars}<ul>${checks}</ul><p class="notice">${d.method}</p>`}catch(err){out.innerHTML=`<div class="empty">${err.message}</div>`}});
-</script></body></html>
+<body>
+  <header>
+    <nav class="shell">
+      <div class="brand"><span class="brand-mark">다</span>급식 다음</div>
+      <a href="https://github.com/jsm0308/school-meal-balance">GitHub에서 코드 보기 ↗</a>
+    </nav>
+    <section class="hero shell">
+      <div>
+        <div class="eyebrow">SCHOOL MEAL × OPTIMIZATION</div>
+        <h1>급식은 정해져 있어도,<br>하루의 균형은 바꿀 수 있으니까.</h1>
+        <p class="lead">오늘 학교 급식을 먼저 고르면 남은 영양 격차를 계산하고, 아침·저녁·간식 조합 중 조건에 가장 가까운 하루 식단을 찾아봅니다.</p>
+        <div class="hero-actions">
+          <a class="button" href="#planner">내 조건으로 계산하기</a>
+          <a class="button secondary" href="#how">계산 방식 보기</a>
+        </div>
+      </div>
+      <div class="tray-card" aria-label="학교 급식 식판 일러스트">
+        <div class="tray-label">TODAY'S SCHOOL LUNCH</div>
+        <div class="tray">
+          <div class="tray-cell">🍚</div>
+          <div class="tray-cell">🥦</div>
+          <div class="tray-cell">🍗</div>
+        </div>
+        <p class="tray-note">급식으로 채운 만큼을 빼고, 남은 하루를 다시 계산합니다.</p>
+      </div>
+    </section>
+  </header>
+
+  <main class="shell" id="planner">
+    <div class="section-head">
+      <h2>오늘 급식 다음에<br>무엇을 먹으면 좋을까?</h2>
+      <p>실제 학교·날짜 조회 대신 세 가지 급식 예시와 소규모 시연 데이터를 사용합니다. 입력 조건이 같으면 결과도 같습니다.</p>
+    </div>
+    <div class="workspace">
+      <section class="panel">
+        <h3>1. 오늘의 조건</h3>
+        <form id="form">
+          <label class="field" for="age">나이</label>
+          <input id="age" name="age" type="number" value="16" min="13" max="18" required>
+
+          <label class="field" for="sex">성별</label>
+          <select id="sex" name="sex">
+            <option value="female">여성</option>
+            <option value="male">남성</option>
+          </select>
+
+          <label class="field" for="activity">활동량</label>
+          <select id="activity" name="activity">
+            <option value="low">낮음</option>
+            <option value="medium" selected>보통</option>
+            <option value="high">높음</option>
+          </select>
+
+          <label class="field">학교 급식 예시</label>
+          <div class="lunch-grid">
+            <label class="lunch-option"><input type="radio" name="lunch" value="chicken" checked><span><b>닭구이 급식</b><small>현미밥 · 닭구이 · 브로콜리</small></span></label>
+            <label class="lunch-option"><input type="radio" name="lunch" value="tofu"><span><b>두부조림 급식</b><small>잡곡밥 · 두부조림 · 시금치</small></span></label>
+            <label class="lunch-option"><input type="radio" name="lunch" value="salmon"><span><b>생선구이 급식</b><small>현미밥 · 생선구이 · 콩나물</small></span></label>
+          </div>
+
+          <label class="field" for="budget">하루 예산</label>
+          <input id="budget" name="budget" type="number" value="12000" min="3000" step="500" required>
+
+          <label class="field">알레르기·제외 식품</label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" name="exclusions" value="dairy">유제품</label>
+            <label class="check"><input type="checkbox" name="exclusions" value="egg">계란</label>
+            <label class="check"><input type="checkbox" name="exclusions" value="fish">생선</label>
+            <label class="check"><input type="checkbox" name="exclusions" value="soy">대두</label>
+            <label class="check"><input type="checkbox" name="exclusions" value="gluten">글루텐</label>
+          </div>
+          <button class="button" type="submit">급식 다음 식단 계산하기</button>
+        </form>
+        <p class="notice">포트폴리오용 프로토타입입니다. 시연용 영양·가격 데이터이며 의료·영양 상담을 대신하지 않습니다.</p>
+      </section>
+
+      <section class="panel" id="result" aria-live="polite">
+        <div class="empty">기본 조건으로 결과를 준비하고 있습니다.</div>
+      </section>
+    </div>
+
+    <section class="how" id="how">
+      <article><b>01 · 급식 고정</b><p>청소년의 점심은 학교 급식으로 정해진다는 현실 제약을 먼저 반영합니다.</p></article>
+      <article><b>02 · 남은 격차 계산</b><p>하루 목표와 급식 섭취량의 차이를 확인한 뒤 보완할 영양소를 찾습니다.</p></article>
+      <article><b>03 · 후보 비교</b><p>아침·저녁·간식 후보 36개를 전수 비교해 영양 차이와 예산 초과가 작은 조합을 고릅니다.</p></article>
+    </section>
+  </main>
+
+  <footer><div class="shell">2025 KHUDA 청소년 식단 최적화 프로젝트 · 2026 포트폴리오 UI 개편 및 시연 데이터 정리</div></footer>
+
+  <script>
+    const nutrientNames = {kcal: '열량', protein: '단백질', fiber: '식이섬유', calcium: '칼슘', iron: '철분'};
+    const nutrientKeys = Object.keys(nutrientNames);
+    const foods = {
+      '현미밥': [310, 6, 3.8, 20, 1.1, 700, []], '잡곡밥': [295, 5.5, 3.2, 18, 1, 750, []],
+      '통밀빵': [260, 9, 5, 80, 2.2, 900, ['gluten']], '닭가슴살구이': [185, 35, 0, 12, .9, 2400, []],
+      '두부조림': [210, 18, 2, 380, 4.2, 1600, ['soy']], '연어구이': [230, 25, 0, 18, .7, 3600, ['fish']],
+      '계란찜': [160, 13, 0, 65, 1.8, 1200, ['egg']], '시금치나물': [55, 3.5, 3.2, 145, 2.7, 700, []],
+      '브로콜리': [65, 4.3, 4.5, 70, 1.1, 850, []], '콩나물무침': [70, 5.5, 2.6, 45, 1.4, 600, ['soy']],
+      '바나나': [105, 1.3, 3.1, 6, .3, 700, []], '사과': [95, .5, 4.4, 10, .2, 800, []],
+      '군고구마': [180, 3, 4.8, 35, .9, 900, []], '우유': [130, 7, 0, 260, .1, 700, ['dairy']],
+      '플레인요거트': [140, 8, 0, 220, .1, 1000, ['dairy']]
+    };
+    const candidates = {
+      '아침': [['통밀빵','계란찜','바나나','우유'],['현미밥','두부조림','시금치나물','우유'],['잡곡밥','계란찜','브로콜리','사과']],
+      '저녁': [['잡곡밥','닭가슴살구이','시금치나물'],['현미밥','두부조림','브로콜리'],['잡곡밥','연어구이','브로콜리']],
+      '간식': [['플레인요거트','사과'],['우유','바나나'],['플레인요거트','바나나'],['군고구마','사과']]
+    };
+    const lunches = {
+      chicken: ['닭구이 급식',['현미밥','닭가슴살구이','브로콜리']],
+      tofu: ['두부조림 급식',['잡곡밥','두부조림','시금치나물']],
+      salmon: ['생선구이 급식',['현미밥','연어구이','콩나물무침']]
+    };
+    const allowed = (items, excluded) => items.every(name => !excluded.has(name) && !foods[name][6].some(tag => excluded.has(tag)));
+    function optimizeLocal(payload) {
+      const age = Number(payload.age), budget = Number(payload.budget);
+      if (age < 13 || age > 18) throw new Error('이 데모는 13~18세 청소년 입력만 지원합니다.');
+      const lunch = lunches[payload.lunch];
+      const excluded = new Set(payload.exclusions);
+      if (!allowed(lunch[1], excluded)) throw new Error('선택한 급식에 제외 식품이 포함되어 있습니다. 다른 급식을 골라 주세요.');
+      const target = {
+        kcal: (payload.sex === 'female' ? 2100 : 2400) + ({low:-150, medium:0, high:250}[payload.activity]) + (age >= 16 ? 100 : 0),
+        protein: payload.sex === 'female' ? 55 : 65, fiber: 25, calcium: 1000, iron: payload.sex === 'female' ? 15 : 11
+      };
+      let best = null;
+      for (const breakfast of candidates['아침']) for (const dinner of candidates['저녁']) for (const snack of candidates['간식']) {
+        const plan = {'아침': breakfast, '학교 급식': lunch[1], '저녁': dinner, '간식': snack};
+        if (!Object.values(plan).every(items => allowed(items, excluded))) continue;
+        const total = {kcal:0, protein:0, fiber:0, calcium:0, iron:0, cost:0};
+        Object.values(plan).flat().forEach(name => {
+          ['kcal','protein','fiber','calcium','iron','cost'].forEach((key, index) => total[key] += foods[name][index]);
+        });
+        const weights = {kcal:1, protein:1.35, fiber:1.2, calcium:1.15, iron:1.2};
+        const gap = nutrientKeys.reduce((sum,key) => sum + weights[key] * Math.abs(total[key]-target[key])/target[key], 0);
+        const shortfall = ['protein','fiber','calcium','iron'].reduce((sum,key) => sum + weights[key] * Math.max(0,target[key]-total[key])/target[key], 0);
+        const score = gap + shortfall * .7 + Math.max(0,total.cost-budget)/Math.max(budget,1)*7;
+        if (!best || score < best.score) best = {score, total, plan};
+      }
+      if (!best) throw new Error('현재 제외 조건으로 만들 수 있는 식단이 없습니다. 제외 항목을 줄여 주세요.');
+      const ratios = Object.fromEntries(nutrientKeys.map(key => [key, Math.round(best.total[key]/target[key]*100)]));
+      const constraints = {
+        '예산': best.total.cost <= budget,
+        '알레르기·제외 식품': true,
+        '열량 범위(목표의 80~120%)': ratios.kcal >= 80 && ratios.kcal <= 120,
+        '단백질(목표의 80% 이상)': ratios.protein >= 80,
+        '식이섬유(목표의 70% 이상)': ratios.fiber >= 70
+      };
+      return {
+        meals: best.plan, totals: best.total, ratios, constraints,
+        lunch: {label:lunch[0]}, all_constraints_met:Object.values(constraints).every(Boolean),
+        method:'선택한 급식은 고정하고 아침·저녁·간식 후보 36개를 비교해 영양 목표 차이와 예산 초과 패널티가 가장 작은 조합을 골랐습니다.'
+      };
+    }
+    const form = document.querySelector('#form');
+    const result = document.querySelector('#result');
+
+    function render(data) {
+      const meals = Object.entries(data.meals).map(([name, items]) =>
+        `<article class="meal ${name === '학교 급식' ? 'school' : ''}"><h4>${name}</h4><p>${items.join(' · ')}</p></article>`
+      ).join('');
+      const bars = Object.keys(nutrientNames).map(key =>
+        `<div class="bar-row"><span>${nutrientNames[key]}</span><div class="bar"><i style="width:${Math.min(data.ratios[key], 130) / 1.3}%"></i></div><b>${data.ratios[key]}%</b></div>`
+      ).join('');
+      const checks = Object.entries(data.constraints).map(([name, ok]) =>
+        `<li class="${ok ? 'ok' : 'warn'}">${name}: ${ok ? '충족' : '조정 필요'}</li>`
+      ).join('');
+      result.innerHTML = `
+        <h3>2. 급식 다음 계산 결과</h3>
+        <div class="summary">
+          <div class="metric"><span>총비용</span><b>${data.totals.cost.toLocaleString()}원</b></div>
+          <div class="metric"><span>급식 기준</span><b>${data.lunch.label}</b></div>
+          <div class="metric"><span>조건 상태</span><b>${data.all_constraints_met ? '충족' : '조정 필요'}</b></div>
+        </div>
+        <div class="meals">${meals}</div>
+        <h4 class="result-title">하루 목표 대비</h4>
+        ${bars}
+        <ul class="checks-result">${checks}</ul>
+        <p class="method">${data.method}</p>`;
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const values = new FormData(form);
+      const payload = {
+        age: values.get('age'),
+        sex: values.get('sex'),
+        activity: values.get('activity'),
+        lunch: values.get('lunch'),
+        budget: values.get('budget'),
+        exclusions: values.getAll('exclusions')
+      };
+      result.innerHTML = '<div class="loading">후보 식단 36개를 비교하고 있습니다…</div>';
+      try {
+        let data;
+        if (location.hostname.endsWith('github.io') || location.protocol === 'file:') {
+          data = optimizeLocal(payload);
+        } else {
+          const response = await fetch('/api/optimize', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+          });
+          data = await response.json();
+          if (!response.ok) throw new Error(data.error);
+        }
+        render(data);
+      } catch (error) {
+        result.innerHTML = `<div class="empty">${error.message}</div>`;
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => form.requestSubmit());
+  </script>
+</body>
+</html>

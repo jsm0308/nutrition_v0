@@ -33,17 +33,27 @@ MEALS = {
         ["현미밥", "두부조림", "시금치나물", "우유"],
         ["잡곡밥", "계란찜", "브로콜리", "사과"],
     ],
-    "점심": [
-        ["현미밥", "닭가슴살구이", "브로콜리"],
-        ["잡곡밥", "두부조림", "시금치나물"],
-        ["현미밥", "연어구이", "콩나물무침"],
-    ],
     "저녁": [
         ["잡곡밥", "닭가슴살구이", "시금치나물"],
         ["현미밥", "두부조림", "브로콜리"],
         ["잡곡밥", "연어구이", "브로콜리"],
     ],
     "간식": [["플레인요거트", "사과"], ["우유", "바나나"], ["플레인요거트", "바나나"], ["군고구마", "사과"]],
+}
+
+SCHOOL_LUNCHES = {
+    "chicken": {
+        "label": "닭구이 급식",
+        "items": ["현미밥", "닭가슴살구이", "브로콜리"],
+    },
+    "tofu": {
+        "label": "두부조림 급식",
+        "items": ["잡곡밥", "두부조림", "시금치나물"],
+    },
+    "salmon": {
+        "label": "생선구이 급식",
+        "items": ["현미밥", "연어구이", "콩나물무침"],
+    },
 }
 
 
@@ -105,10 +115,16 @@ def optimize(payload: dict) -> dict:
     if sex not in {"female", "male"} or activity not in {"low", "medium", "high"}:
         raise ValueError("성별 또는 활동량 값이 올바르지 않습니다.")
     exclusions = {str(value).strip().lower() for value in payload.get("exclusions", []) if str(value).strip()}
+    lunch_key = str(payload.get("lunch", "chicken"))
+    if lunch_key not in SCHOOL_LUNCHES:
+        raise ValueError("급식 예시를 다시 선택해 주세요.")
+    lunch = SCHOOL_LUNCHES[lunch_key]
+    if not _is_allowed(lunch["items"], exclusions):
+        raise ValueError("선택한 급식에 제외 식품이 포함되어 있습니다. 다른 급식을 골라 주세요.")
     target = targets(age, sex, activity)
     candidates = []
-    for breakfast, lunch, dinner, snack in product(MEALS["아침"], MEALS["점심"], MEALS["저녁"], MEALS["간식"]):
-        plan = {"아침": breakfast, "점심": lunch, "저녁": dinner, "간식": snack}
+    for breakfast, dinner, snack in product(MEALS["아침"], MEALS["저녁"], MEALS["간식"]):
+        plan = {"아침": breakfast, "학교 급식": lunch["items"], "저녁": dinner, "간식": snack}
         if not all(_is_allowed(items, exclusions) for items in plan.values()):
             continue
         total = _totals(plan)
@@ -133,5 +149,6 @@ def optimize(payload: dict) -> dict:
         "gaps": gaps,
         "constraints": constraints,
         "all_constraints_met": all(constraints.values()),
-        "method": "소규모 후보 식단을 전수 비교해 영양 목표 차이와 예산 초과 패널티가 가장 작은 조합을 선택했습니다.",
+        "lunch": {"key": lunch_key, "label": lunch["label"], "items": lunch["items"]},
+        "method": "선택한 급식은 고정하고 아침·저녁·간식 후보 36개를 비교해 영양 목표 차이와 예산 초과 패널티가 가장 작은 조합을 골랐습니다.",
     }

@@ -26,7 +26,7 @@ class AppHandler(BaseHTTPRequestHandler):
         if path == "/api/health":
             self._send(
                 HTTPStatus.OK,
-                b'{"status":"ok","service":"nutrition-demo","mode":"deterministic_demo","data":"synthetic_estimates"}',
+                b'{"status":"ok","service":"school-meal-balance","mode":"deterministic_demo","data":"synthetic_estimates"}',
                 "application/json; charset=utf-8",
             )
             return
@@ -54,8 +54,8 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="청소년 식단 최적화 데모 서버")
+    parser = argparse.ArgumentParser(description="급식 다음: 청소년 식단 밸런스 데모 서버")
     parser.add_argument("--port", type=int, default=8103, help="서버 포트 (기본값: 8103)")
     args = parser.parse_args()
-    print(f"Nutrition demo: http://127.0.0.1:{args.port}")
+    print(f"School Meal Balance: http://127.0.0.1:{args.port}")
     ThreadingHTTPServer(("127.0.0.1", args.port), AppHandler).serve_forever()

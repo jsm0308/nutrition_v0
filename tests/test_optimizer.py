@@ -23,6 +23,15 @@ class OptimizerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             optimize({"age": 12, "budget": 12000})
 
+    def test_fixed_lunch_is_returned(self):
+        result = optimize({"age": 16, "budget": 12000, "lunch": "tofu"})
+        self.assertEqual(result["lunch"]["label"], "두부조림 급식")
+        self.assertEqual(result["meals"]["학교 급식"], ["잡곡밥", "두부조림", "시금치나물"])
+
+    def test_conflicting_lunch_exclusion_is_rejected(self):
+        with self.assertRaises(ValueError):
+            optimize({"age": 16, "budget": 12000, "lunch": "salmon", "exclusions": ["fish"]})
+
 
 class ApiTests(unittest.TestCase):
     @classmethod
@@ -54,7 +63,7 @@ class ApiTests(unittest.TestCase):
         conn.request("GET", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
-        self.assertIn("Meal Constraint Lab", response.read().decode("utf-8"))
+        self.assertIn("급식 다음", response.read().decode("utf-8"))
 
 
 if __name__ == "__main__":

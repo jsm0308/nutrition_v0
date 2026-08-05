@@ -63,7 +63,7 @@ class ApiTests(unittest.TestCase):
         conn.request("GET", "/")
         response = conn.getresponse()
         self.assertEqual(response.status, 200)
-        self.assertIn("급식 다음", response.read().decode("utf-8"))
+        self.assertIn("다음 급식", response.read().decode("utf-8"))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="학교 급식을 기준으로 남은 하루의 영양 균형을 계산하는 청소년 식단 최적화 데모">
   <link rel="icon" href="data:,">
-  <title>급식 다음 | 청소년 식단 밸런스</title>
+  <title>다음 급식 | 청소년 식단 밸런스</title>
   <style>
     :root {
       --ink: #173c34;
@@ -116,7 +116,7 @@
 <body>
   <header>
     <nav class="shell">
-      <div class="brand"><span class="brand-mark">다</span>급식 다음</div>
+      <div class="brand"><span class="brand-mark">다</span>다음 급식</div>
       <a href="https://github.com/jsm0308/school-meal-balance">GitHub에서 코드 보기 ↗</a>
     </nav>
     <section class="hero shell">
@@ -143,7 +143,7 @@
 
   <main class="shell" id="planner">
     <div class="section-head">
-      <h2>오늘 급식 다음에<br>무엇을 먹으면 좋을까?</h2>
+      <h2>오늘 급식 뒤에는<br>무엇을 먹으면 좋을까?</h2>
       <p>실제 학교·날짜 조회 대신 세 가지 급식 예시와 소규모 시연 데이터를 사용합니다. 입력 조건이 같으면 결과도 같습니다.</p>
     </div>
     <div class="workspace">
@@ -184,7 +184,7 @@
             <label class="check"><input type="checkbox" name="exclusions" value="soy">대두</label>
             <label class="check"><input type="checkbox" name="exclusions" value="gluten">글루텐</label>
           </div>
-          <button class="button" type="submit">급식 다음 식단 계산하기</button>
+          <button class="button" type="submit">다음 급식 식단 계산하기</button>
         </form>
         <p class="notice">포트폴리오용 프로토타입입니다. 시연용 영양·가격 데이터이며 의료·영양 상담을 대신하지 않습니다.</p>
       </section>
@@ -280,7 +280,7 @@
         `<li class="${ok ? 'ok' : 'warn'}">${name}: ${ok ? '충족' : '조정 필요'}</li>`
       ).join('');
       result.innerHTML = `
-        <h3>2. 급식 다음 계산 결과</h3>
+        <h3>2. 다음 급식 계산 결과</h3>
         <div class="summary">
           <div class="metric"><span>총비용</span><b>${data.totals.cost.toLocaleString()}원</b></div>
           <div class="metric"><span>급식 기준</span><b>${data.lunch.label}</b></div>
